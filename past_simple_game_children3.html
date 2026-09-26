@@ -1,0 +1,910 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Time Machine — Past Simple Game!</title>
+<link href="https://fonts.googleapis.com/css2?family=Fredoka+One&family=Nunito:wght@400;700;800;900&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --space:   #0d0d2b;
+    --deep:    #12124a;
+    --star:    #f9e84e;
+    --star-lt: #fefce8;
+    --rocket:  #ff5e78;
+    --rocket-lt:#fff0f3;
+    --mint:    #34d399;
+    --mint-lt: #d1fae5;
+    --purple:  #a855f7;
+    --pur-lt:  #f3e8ff;
+    --blue:    #38bdf8;
+    --blu-lt:  #e0f2fe;
+    --orange:  #fb923c;
+    --org-lt:  #fff7ed;
+    --white:   #ffffff;
+    --muted:   #94a3b8;
+    --border:  #1e1e5a;
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Nunito', sans-serif;
+    background: var(--space);
+    color: var(--white);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* STARS BG */
+  .stars {
+    position: fixed; inset: 0; pointer-events: none; z-index: 0;
+    background:
+      radial-gradient(1px 1px at 10% 15%, white, transparent),
+      radial-gradient(1px 1px at 25% 40%, white, transparent),
+      radial-gradient(1.5px 1.5px at 40% 10%, white, transparent),
+      radial-gradient(1px 1px at 55% 60%, white, transparent),
+      radial-gradient(2px 2px at 70% 25%, white, transparent),
+      radial-gradient(1px 1px at 80% 75%, white, transparent),
+      radial-gradient(1.5px 1.5px at 90% 50%, white, transparent),
+      radial-gradient(1px 1px at 15% 80%, white, transparent),
+      radial-gradient(1px 1px at 45% 85%, white, transparent),
+      radial-gradient(2px 2px at 60% 45%, white, transparent),
+      radial-gradient(1px 1px at 35% 70%, white, transparent),
+      radial-gradient(1px 1px at 75% 90%, white, transparent),
+      radial-gradient(1.5px 1.5px at 5%  55%, white, transparent),
+      radial-gradient(1px 1px at 88% 20%, white, transparent),
+      radial-gradient(1px 1px at 50% 30%, white, transparent);
+    opacity: .6;
+  }
+
+  .wrap { position: relative; z-index: 1; max-width: 760px; margin: 0 auto; padding: 0 16px 80px; }
+
+  /* HEADER */
+  header {
+    text-align: center; padding: 36px 16px 20px;
+    position: relative;
+  }
+  .rocket-icon { font-size: 3.5rem; display: block; margin-bottom: 8px; animation: bob 2.5s ease-in-out infinite; }
+  @keyframes bob { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-10px)} }
+  header h1 {
+    font-family: 'Fredoka One', cursive;
+    font-size: clamp(2rem, 7vw, 3.2rem);
+    color: var(--star);
+    text-shadow: 0 0 30px rgba(249,232,78,.5), 3px 3px 0 #a05c00;
+    line-height: 1.1;
+  }
+  header p {
+    margin-top: 8px; font-size: .95rem; color: var(--blue);
+    font-weight: 700;
+  }
+
+  /* GRAMMAR PANEL */
+  .grammar-panel {
+    background: var(--deep); border: 2px solid var(--border);
+    border-radius: 18px; padding: 18px 20px; margin-bottom: 28px;
+  }
+  .grammar-panel h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1.15rem; color: var(--star);
+    margin-bottom: 14px; text-align: center;
+  }
+  .grammar-grid { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; }
+  .g-box {
+    border-radius: 12px; padding: 12px 13px; font-size: .85rem;
+    font-weight: 700; line-height: 1.6;
+  }
+  .g-aff  { background: rgba(52,211,153,.12); border: 2px solid var(--mint); }
+  .g-neg  { background: rgba(255,94,120,.12); border: 2px solid var(--rocket); }
+  .g-int  { background: rgba(168,85,247,.12); border: 2px solid var(--purple); }
+  .g-lbl  {
+    font-size: .62rem; font-weight: 900; letter-spacing: 1.5px;
+    text-transform: uppercase; display: block; margin-bottom: 4px;
+  }
+  .g-aff .g-lbl { color: var(--mint); }
+  .g-neg .g-lbl { color: var(--rocket); }
+  .g-int .g-lbl { color: var(--purple); }
+  .g-eg   { font-size: .77rem; color: var(--muted); margin-top: 4px; font-style: italic; }
+
+  /* SCORE BAR */
+  .score-bar {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--deep); border: 2px solid var(--border);
+    border-radius: 50px; padding: 10px 20px;
+    margin-bottom: 22px; flex-wrap: wrap; gap: 10px;
+  }
+  .score-pill {
+    font-family: 'Fredoka One', cursive;
+    font-size: 1rem; display: flex; align-items: center; gap: 6px;
+  }
+  .score-pill .val { color: var(--star); font-size: 1.3rem; }
+  .lives { display: flex; gap: 4px; }
+  .heart { font-size: 1.3rem; transition: all .3s; }
+  .heart.lost { opacity: .25; filter: grayscale(1); }
+
+  /* GAME MODES */
+  .mode-btns {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    justify-content: center; margin-bottom: 24px;
+  }
+  .mode-btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: .8rem; font-weight: 800;
+    border: 2px solid var(--border); border-radius: 30px;
+    background: var(--deep); color: var(--muted);
+    padding: 8px 18px; cursor: pointer; transition: all .2s;
+  }
+  .mode-btn:hover { border-color: var(--star); color: var(--star); }
+  .mode-btn.active { background: var(--star); border-color: var(--star); color: var(--space); }
+
+  /* GAME AREAS */
+  .game { display: none; }
+  .game.active { display: block; }
+
+  /* SHARED CARD */
+  .game-card {
+    background: var(--deep); border: 2px solid var(--border);
+    border-radius: 20px; padding: 22px 24px; margin-bottom: 16px;
+  }
+  .game-card .planet { font-size: 2.5rem; display: block; text-align: center; margin-bottom: 8px; }
+  .game-card .sentence {
+    font-size: 1.1rem; font-weight: 800; text-align: center;
+    line-height: 1.6; color: var(--white);
+  }
+  .game-card .verb-hint {
+    text-align: center; margin-top: 6px;
+    font-size: .82rem; color: var(--muted); font-weight: 700;
+  }
+
+  /* ── GAME 1: MC BLAST ── */
+  .mc-opts { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; margin-top: 16px; }
+  .mc-opt {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; font-weight: 900;
+    border: 3px solid var(--border); border-radius: 14px;
+    background: var(--space); color: var(--white);
+    padding: 12px 24px; cursor: pointer; transition: all .2s;
+    min-width: 120px; text-align: center;
+  }
+  .mc-opt:hover { border-color: var(--star); color: var(--star); transform: scale(1.05); }
+  .mc-opt.boom  { background: var(--mint); border-color: var(--mint); color: var(--space); animation: boom .4s; }
+  .mc-opt.zap   { background: var(--rocket); border-color: var(--rocket); color: white; animation: zap .4s; }
+  @keyframes boom { 0%{transform:scale(1)} 50%{transform:scale(1.2)} 100%{transform:scale(1)} }
+  @keyframes zap  { 0%,100%{transform:translateX(0)} 25%{transform:translateX(-6px)} 75%{transform:translateX(6px)} }
+  .mc-opt:disabled { cursor: default; transform: none; }
+
+  /* ── GAME 2: TYPE IT ── */
+  .type-inp {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1.2rem; font-weight: 800;
+    background: var(--space); color: var(--star);
+    border: 3px solid var(--border); border-radius: 12px;
+    padding: 10px 18px; outline: none;
+    width: 100%; text-align: center; margin-top: 14px;
+    transition: border-color .2s;
+  }
+  .type-inp:focus { border-color: var(--blue); }
+  .type-inp.ok  { border-color: var(--mint); color: var(--mint); }
+  .type-inp.err { border-color: var(--rocket); color: var(--rocket); }
+  .type-submit {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; font-weight: 900;
+    background: var(--purple); color: white;
+    border: none; border-radius: 12px;
+    padding: 11px 32px; cursor: pointer;
+    margin-top: 12px; display: block; width: 100%;
+    transition: opacity .18s; letter-spacing: .3px;
+  }
+  .type-submit:hover { opacity: .85; }
+
+  /* ── GAME 3: WORD ORDER ── */
+  .wo-chips { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 12px; }
+  .wo-chip {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem; font-weight: 900;
+    background: var(--deep); border: 2.5px solid var(--purple);
+    color: var(--purple); border-radius: 20px;
+    padding: 7px 16px; cursor: pointer;
+    transition: all .18s; user-select: none;
+  }
+  .wo-chip:hover { background: var(--purple); color: white; transform: translateY(-2px); }
+  .wo-chip.used { opacity: .2; cursor: default; pointer-events: none; }
+  .wo-area {
+    min-height: 50px; border: 2.5px dashed var(--border);
+    border-radius: 12px; padding: 10px 14px;
+    display: flex; flex-wrap: wrap; gap: 8px;
+    align-items: center; margin-bottom: 10px;
+    justify-content: center;
+  }
+  .wo-placed {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem; font-weight: 800;
+    background: rgba(56,189,248,.15); border: 2px solid var(--blue);
+    color: var(--blue); border-radius: 16px;
+    padding: 5px 14px; cursor: pointer; transition: all .18s;
+  }
+  .wo-placed:hover { background: rgba(255,94,120,.2); border-color: var(--rocket); color: var(--rocket); }
+  .wo-check-btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem; font-weight: 900;
+    background: var(--mint); color: var(--space);
+    border: none; border-radius: 12px;
+    padding: 11px 32px; cursor: pointer;
+    display: block; width: 100%;
+    transition: opacity .18s;
+  }
+  .wo-check-btn:hover { opacity: .88; }
+
+  /* ── GAME 4: ALIEN SORT ── */
+  .alien-intro { text-align: center; color: var(--muted); font-size: .88rem; font-weight: 700; margin-bottom: 14px; }
+  .alien-zones { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 16px; }
+  .alien-zone {
+    border: 2.5px dashed var(--border); border-radius: 14px;
+    padding: 12px 10px; min-height: 120px;
+  }
+  .alien-zone.aff-zone  { border-color: var(--mint); }
+  .alien-zone.neg-zone  { border-color: var(--rocket); }
+  .alien-zone.int-zone  { border-color: var(--purple); }
+  .zone-label {
+    font-size: .7rem; font-weight: 900; letter-spacing: 1px;
+    text-transform: uppercase; text-align: center; margin-bottom: 8px; display: block;
+  }
+  .aff-zone .zone-label { color: var(--mint); }
+  .neg-zone .zone-label { color: var(--rocket); }
+  .int-zone .zone-label { color: var(--purple); }
+  .zone-items { display: flex; flex-direction: column; gap: 5px; min-height: 50px; }
+  .sort-word {
+    font-family: 'Nunito', sans-serif;
+    font-size: .82rem; font-weight: 800;
+    background: var(--deep); border: 2px solid var(--border);
+    border-radius: 8px; padding: 6px 10px;
+    cursor: grab; text-align: center;
+    transition: all .18s; user-select: none;
+  }
+  .sort-word:hover { border-color: var(--star); color: var(--star); }
+  .sort-word.dragging { opacity: .4; }
+  .sort-word.placed-aff { border-color: var(--mint); color: var(--mint); background: rgba(52,211,153,.1); }
+  .sort-word.placed-neg { border-color: var(--rocket); color: var(--rocket); background: rgba(255,94,120,.1); }
+  .sort-word.placed-int { border-color: var(--purple); color: var(--purple); background: rgba(168,85,247,.1); }
+  .alien-bank { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; }
+  .sort-check {
+    font-family: 'Nunito', sans-serif;
+    font-size: .95rem; font-weight: 900;
+    background: var(--orange); color: white;
+    border: none; border-radius: 12px;
+    padding: 11px 32px; cursor: pointer;
+    display: block; width: 100%; margin-top: 12px;
+    transition: opacity .18s;
+  }
+  .sort-check:hover { opacity: .88; }
+
+  /* FEEDBACK */
+  .fb {
+    text-align: center; font-size: 1.1rem; font-weight: 900;
+    padding: 12px; border-radius: 12px; margin-top: 10px;
+    display: none;
+  }
+  .fb.show { display: block; }
+  .fb.ok  { background: rgba(52,211,153,.15); color: var(--mint); border: 2px solid var(--mint); }
+  .fb.err { background: rgba(255,94,120,.15); color: var(--rocket); border: 2px solid var(--rocket); }
+
+  /* NEXT BUTTON */
+  .next-btn {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; font-weight: 900;
+    background: var(--star); color: var(--space);
+    border: none; border-radius: 12px;
+    padding: 12px 32px; cursor: pointer;
+    margin-top: 12px; display: none; width: 100%;
+    transition: transform .15s;
+    box-shadow: 0 4px 0 #a05c00;
+  }
+  .next-btn:hover { transform: translateY(-2px); }
+  .next-btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #a05c00; }
+  .next-btn.show { display: block; }
+
+  /* WIN SCREEN */
+  .win-screen {
+    display: none; text-align: center; padding: 40px 20px;
+    background: var(--deep); border: 3px solid var(--star);
+    border-radius: 24px; margin-top: 20px;
+  }
+  .win-screen.show { display: block; }
+  .win-screen .big { font-size: 4rem; display: block; margin-bottom: 10px; animation: spin 1s ease; }
+  @keyframes spin { from{transform:rotate(0)} to{transform:rotate(360deg)} }
+  .win-screen h2 {
+    font-family: 'Fredoka One', cursive;
+    font-size: 2rem; color: var(--star); margin-bottom: 6px;
+  }
+  .win-screen p { color: var(--muted); font-size: .95rem; font-weight: 700; margin-bottom: 16px; }
+  .play-again {
+    font-family: 'Nunito', sans-serif;
+    font-size: 1rem; font-weight: 900;
+    background: var(--mint); color: var(--space);
+    border: none; border-radius: 12px;
+    padding: 12px 32px; cursor: pointer;
+    transition: opacity .18s;
+  }
+  .play-again:hover { opacity: .88; }
+
+  /* CONFETTI particle */
+  .confetti-piece {
+    position: fixed; width: 10px; height: 10px;
+    border-radius: 2px; pointer-events: none;
+    animation: fall 2s linear forwards;
+    z-index: 999;
+  }
+  @keyframes fall {
+    0%   { transform: translateY(-20px) rotate(0deg); opacity:1; }
+    100% { transform: translateY(100vh) rotate(720deg); opacity:0; }
+  }
+
+  @media(max-width:520px){
+    .grammar-grid  { grid-template-columns: 1fr; }
+    .alien-zones   { grid-template-columns: 1fr; }
+  }
+</style>
+</head>
+<body>
+<div class="stars"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <span class="rocket-icon">🚀</span>
+    <h1>Time Machine!</h1>
+    <p>Travel to the past and use your verbs! ⏰</p>
+  </header>
+
+  <!-- GRAMMAR PANEL -->
+  <div class="grammar-panel">
+    <h2>🌍 Past Simple — Regular Verbs</h2>
+    <div class="grammar-grid">
+      <div class="g-box g-aff">
+        <span class="g-lbl">✅ Affirmative</span>
+        verb + <b>-ed</b><br>
+        I <b>worked</b>.<br>
+        She <b>visited</b>.<br>
+        They <b>played</b>.
+        <div class="g-eg">study → studied<br>stop → stopped</div>
+      </div>
+      <div class="g-box g-neg">
+        <span class="g-lbl">❌ Negative</span>
+        <b>didn't</b> + verb<br>
+        I <b>didn't work</b>.<br>
+        She <b>didn't visit</b>.<br>
+        They <b>didn't play</b>.
+        <div class="g-eg">Never add -ed after didn't!</div>
+      </div>
+      <div class="g-box g-int">
+        <span class="g-lbl">❓ Question</span>
+        <b>Did</b> + subject + verb<br>
+        <b>Did</b> you work?<br>
+        <b>Did</b> she visit?<br>
+        Yes! / No, I didn't.
+        <div class="g-eg">verb stays in base form!</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- SCORE BAR -->
+  <div class="score-bar">
+    <div class="score-pill">⭐ Points: <span class="val" id="pts">0</span></div>
+    <div class="score-pill">🔥 Streak: <span class="val" id="streak">0</span></div>
+    <div class="lives" id="lives">
+      <span class="heart">❤️</span><span class="heart">❤️</span><span class="heart">❤️</span>
+    </div>
+    <div class="score-pill">Round <span class="val" id="roundNum">1</span>/8</div>
+  </div>
+
+  <!-- MODE BUTTONS -->
+  <div class="mode-btns">
+    <button class="mode-btn active" onclick="setMode('blast',this)">🚀 Blast Off!</button>
+    <button class="mode-btn" onclick="setMode('type',this)">✏️ Type It!</button>
+    <button class="mode-btn" onclick="setMode('order',this)">🔀 Word Order!</button>
+    <button class="mode-btn" onclick="setMode('sort',this)">👾 Alien Sort!</button>
+  </div>
+
+  <!-- GAME 1: BLAST OFF (MC) -->
+  <div class="game active" id="game-blast">
+    <div class="game-card" id="blast-card">
+      <span class="planet" id="blast-planet"></span>
+      <div class="sentence" id="blast-q"></div>
+      <div class="verb-hint" id="blast-hint"></div>
+    </div>
+    <div class="mc-opts" id="blast-opts"></div>
+    <div class="fb" id="blast-fb"></div>
+    <button class="next-btn" id="blast-next" onclick="nextRound('blast')">Next ➡️</button>
+    <div class="win-screen" id="blast-win">
+      <span class="big">🏆</span>
+      <h2>AMAZING!</h2>
+      <p id="blast-win-txt"></p>
+      <button class="play-again" onclick="restartMode('blast')">Play Again! 🚀</button>
+    </div>
+  </div>
+
+  <!-- GAME 2: TYPE IT -->
+  <div class="game" id="game-type">
+    <div class="game-card" id="type-card">
+      <span class="planet" id="type-planet"></span>
+      <div class="sentence" id="type-q"></div>
+      <div class="verb-hint" id="type-hint"></div>
+    </div>
+    <input class="type-inp" type="text" id="type-inp" placeholder="Type the answer here…" onkeydown="if(event.key==='Enter')checkType()">
+    <button class="type-submit" onclick="checkType()">Check! ✓</button>
+    <div class="fb" id="type-fb"></div>
+    <button class="next-btn" id="type-next" onclick="nextRound('type')">Next ➡️</button>
+    <div class="win-screen" id="type-win">
+      <span class="big">🌟</span>
+      <h2>SUPERSTAR!</h2>
+      <p id="type-win-txt"></p>
+      <button class="play-again" onclick="restartMode('type')">Play Again! ✏️</button>
+    </div>
+  </div>
+
+  <!-- GAME 3: WORD ORDER -->
+  <div class="game" id="game-order">
+    <div class="game-card">
+      <span class="planet" id="ord-planet"></span>
+      <div class="sentence" style="font-size:.9rem;color:var(--muted)">Put the words in the right order!</div>
+    </div>
+    <div class="wo-chips" id="wo-chips"></div>
+    <div class="wo-area" id="wo-area"></div>
+    <button class="wo-check-btn" onclick="checkOrder()">Check! 🌟</button>
+    <div class="fb" id="ord-fb"></div>
+    <button class="next-btn" id="ord-next" onclick="nextRound('order')">Next ➡️</button>
+    <div class="win-screen" id="order-win">
+      <span class="big">🎯</span>
+      <h2>WORD MASTER!</h2>
+      <p id="order-win-txt"></p>
+      <button class="play-again" onclick="restartMode('order')">Play Again! 🔀</button>
+    </div>
+  </div>
+
+  <!-- GAME 4: ALIEN SORT -->
+  <div class="game" id="game-sort">
+    <div class="game-card" style="padding:14px 18px">
+      <div class="sentence" style="font-size:.92rem">
+        👾 The aliens mixed up the sentences! Sort them into the right spaceship!
+      </div>
+    </div>
+    <div class="alien-zones">
+      <div class="alien-zone aff-zone">
+        <span class="zone-label">✅ Affirmative</span>
+        <div class="zone-items" id="zone-aff" ondragover="event.preventDefault()" ondrop="dropItem(event,'aff')"></div>
+      </div>
+      <div class="alien-zone neg-zone">
+        <span class="zone-label">❌ Negative</span>
+        <div class="zone-items" id="zone-neg" ondragover="event.preventDefault()" ondrop="dropItem(event,'neg')"></div>
+      </div>
+      <div class="alien-zone int-zone">
+        <span class="zone-label">❓ Question</span>
+        <div class="zone-items" id="zone-int" ondragover="event.preventDefault()" ondrop="dropItem(event,'int')"></div>
+      </div>
+    </div>
+    <div class="alien-bank" id="alien-bank"></div>
+    <button class="sort-check" onclick="checkSort()">Check the spaceships! 👾</button>
+    <div class="fb" id="sort-fb"></div>
+    <div class="win-screen" id="sort-win">
+      <span class="big">👾</span>
+      <h2>ALIEN SORTED!</h2>
+      <p id="sort-win-txt"></p>
+      <button class="play-again" onclick="restartMode('sort')">Play Again! 👾</button>
+    </div>
+  </div>
+
+</div><!-- /wrap -->
+
+<script>
+/* ═══════════════════════════
+   DATA
+═══════════════════════════ */
+const PLANETS = ['🪐','🌍','🌕','⭐','🔴','🟡','🌠','💫','🌌','🪐'];
+
+// Game 1 & 2 questions: { planet, q (with ___), answer, hint, opts(for MC) }
+const QUESTIONS = [
+  // AFFIRMATIVE
+  { planet:'🪐', q:'Yesterday she ___ her homework after dinner.', ans:'finished', hint:'verb: finish', type:'aff',
+    opts:['finish','finished','did finish'] },
+  { planet:'🌍', q:'We ___ football in the park last Saturday.', ans:'played', hint:'verb: play', type:'aff',
+    opts:['played','plays','did played'] },
+  { planet:'🌕', q:'He ___ to school because he was sick.', ans:"didn't walk", hint:'verb: walk (negative!)', type:'neg',
+    opts:["didn't walk","walked not","not walked"] },
+  { planet:'⭐', q:'___ you visit your grandparents last weekend?', ans:'Did', hint:'question word!', type:'int',
+    opts:['Did','Was','Do'] },
+  { planet:'🔴', q:'I ___ TV all evening. It was boring!', ans:'watched', hint:'verb: watch', type:'aff',
+    opts:['watched','watch','watced'] },
+  { planet:'🟡', q:'They ___ to the new pizza place — they cooked at home.', ans:"didn't go", hint:'verb: go (negative!)', type:'neg',
+    opts:["didn't go","don't go","went not"] },
+  { planet:'🌠', q:'She ___ for her English test all week!', ans:'studied', hint:'verb: study → studied', type:'aff',
+    opts:['studyed','studied','studid'] },
+  { planet:'💫', q:'___ it rain during your holiday?', ans:'Did', hint:'question word!', type:'int',
+    opts:['Did','Was','Does'] },
+  { planet:'🌌', q:'My dog ___ in the garden and made a mess!', ans:'played', hint:'verb: play', type:'aff',
+    opts:['played','play','was played'] },
+  { planet:'🪐', q:'We ___ the whole film — it was too scary!', ans:"didn't watch", hint:'verb: watch (negative!)', type:'neg',
+    opts:["didn't watch","watched not","not watched"] },
+  { planet:'🌍', q:'___ she call you yesterday?', ans:'Did', hint:'question word!', type:'int',
+    opts:['Did','Was','Do'] },
+  { planet:'🌕', q:'He ___ his bike to school every day last year.', ans:'cycled', hint:'verb: cycle', type:'aff',
+    opts:['cycled','cycling','cycleed'] },
+];
+
+// Word order game sentences
+const ORDER_SENTENCES = [
+  { words:['She','visited','her','friend','yesterday','.'], ans:'She visited her friend yesterday .' },
+  { words:['Did','you','play','football','last','week','?'], ans:'Did you play football last week ?' },
+  { words:["I","didn't","study","on","Sunday","."], ans:"I didn't study on Sunday ." },
+  { words:['They','watched','a','film','last','night','.'], ans:'They watched a film last night .' },
+  { words:['Did','he','call','you','?'], ans:'Did he call you ?' },
+  { words:["We","didn't","finish","the","homework","."], ans:"We didn't finish the homework ." },
+  { words:['She','cleaned','her','room','yesterday','.'], ans:'She cleaned her room yesterday .' },
+  { words:['Did','they','arrive','on','time','?'], ans:'Did they arrive on time ?' },
+];
+
+// Sort game
+const SORT_ITEMS = [
+  { text:'She worked all day.',       cat:'aff' },
+  { text:"He didn't finish it.",      cat:'neg' },
+  { text:'Did you call her?',         cat:'int' },
+  { text:'They visited the museum.',  cat:'aff' },
+  { text:"I didn't watch TV.",        cat:'neg' },
+  { text:'Did it rain yesterday?',    cat:'int' },
+  { text:'We played in the park.',    cat:'aff' },
+  { text:"She didn't study.",         cat:'neg' },
+  { text:'Did he arrive on time?',    cat:'int' },
+  { text:'I cleaned my room.',        cat:'aff' },
+  { text:"They didn't enjoy it.",     cat:'neg' },
+  { text:'Did you like the film?',    cat:'int' },
+];
+
+/* ═══════════════════════════
+   STATE
+═══════════════════════════ */
+let pts = 0, streak = 0, lives = 3;
+let currentMode = 'blast';
+let blastIdx = 0, typeIdx = 0, ordIdx = 0;
+let blastOrder = [], typeOrder = [], ordOrder = [];
+
+const ROUND_COUNT = 8;
+
+function shuffle(arr) { return [...arr].sort(()=>Math.random()-.5); }
+
+function initOrder(arr, n) {
+  return shuffle([...Array(arr.length).keys()]).slice(0, Math.min(n, arr.length));
+}
+
+/* ═══════════════════════════
+   SCORE
+═══════════════════════════ */
+function addPts(n) {
+  pts += n; streak++;
+  document.getElementById('pts').textContent = pts;
+  document.getElementById('streak').textContent = streak;
+}
+function loseLife() {
+  streak = 0;
+  document.getElementById('streak').textContent = 0;
+  if(lives > 0) {
+    lives--;
+    const hearts = document.querySelectorAll('.heart');
+    hearts[lives].classList.add('lost');
+  }
+}
+function updateRound(num) {
+  document.getElementById('roundNum').textContent = num;
+}
+
+/* ═══════════════════════════
+   CONFETTI
+═══════════════════════════ */
+function confetti() {
+  const colors = ['#f9e84e','#34d399','#ff5e78','#a855f7','#38bdf8','#fb923c'];
+  for(let i=0; i<40; i++) {
+    const el = document.createElement('div');
+    el.className = 'confetti-piece';
+    el.style.cssText = `
+      left:${Math.random()*100}%;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      animation-delay:${Math.random()*.8}s;
+      animation-duration:${1.5+Math.random()*1}s;
+      transform:rotate(${Math.random()*360}deg);
+    `;
+    document.body.appendChild(el);
+    setTimeout(()=>el.remove(), 3000);
+  }
+}
+
+/* ═══════════════════════════
+   MODE SWITCH
+═══════════════════════════ */
+function setMode(mode, btn) {
+  currentMode = mode;
+  document.querySelectorAll('.mode-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  document.querySelectorAll('.game').forEach(g=>g.classList.remove('active'));
+  document.getElementById('game-'+mode).classList.add('active');
+  if(mode==='blast')  restartMode('blast');
+  if(mode==='type')   restartMode('type');
+  if(mode==='order')  restartMode('order');
+  if(mode==='sort')   initSort();
+}
+
+/* ═══════════════════════════
+   GAME 1: BLAST OFF
+═══════════════════════════ */
+function restartMode(mode) {
+  if(mode==='blast')  { blastIdx=0; blastOrder=initOrder(QUESTIONS,ROUND_COUNT); showBlast(); }
+  if(mode==='type')   { typeIdx=0;  typeOrder=initOrder(QUESTIONS,ROUND_COUNT);  showType(); }
+  if(mode==='order')  { ordIdx=0;   ordOrder=initOrder(ORDER_SENTENCES,ROUND_COUNT); showOrder(); }
+  if(mode==='sort')   initSort();
+  document.getElementById(mode+'-win').classList.remove('show');
+  updateRound(1);
+}
+
+function showBlast() {
+  if(blastIdx >= blastOrder.length) { showWin('blast'); return; }
+  const item = QUESTIONS[blastOrder[blastIdx]];
+  document.getElementById('blast-planet').textContent = item.planet;
+  document.getElementById('blast-q').textContent = item.q.replace('___','_______');
+  document.getElementById('blast-hint').textContent = `💡 ${item.hint}`;
+  document.getElementById('blast-fb').className = 'fb';
+  document.getElementById('blast-next').classList.remove('show');
+  updateRound(blastIdx+1);
+
+  const opts = document.getElementById('blast-opts');
+  opts.innerHTML = '';
+  item.opts.forEach(o => {
+    const btn = document.createElement('button');
+    btn.className = 'mc-opt';
+    btn.textContent = o;
+    btn.onclick = () => pickBlast(btn, o, item.ans);
+    opts.appendChild(btn);
+  });
+}
+
+function pickBlast(btn, chosen, correct) {
+  document.querySelectorAll('.mc-opt').forEach(b=>b.disabled=true);
+  const fb = document.getElementById('blast-fb');
+  if(chosen===correct) {
+    btn.classList.add('boom');
+    fb.textContent = '🚀 BLAST OFF! Correct!'; fb.className='fb show ok';
+    addPts(10 + streak*2);
+  } else {
+    btn.classList.add('zap');
+    fb.textContent = `❌ Oops! The answer is: ${correct}`; fb.className='fb show err';
+    document.querySelectorAll('.mc-opt').forEach(b=>{ if(b.textContent===correct) b.classList.add('boom'); });
+    loseLife();
+  }
+  document.getElementById('blast-next').classList.add('show');
+}
+
+function nextRound(mode) {
+  if(mode==='blast') { blastIdx++; showBlast(); }
+  if(mode==='type')  { typeIdx++;  showType(); }
+  if(mode==='order') { ordIdx++;   showOrder(); }
+}
+
+/* ═══════════════════════════
+   GAME 2: TYPE IT
+═══════════════════════════ */
+function showType() {
+  if(typeIdx >= typeOrder.length) { showWin('type'); return; }
+  const item = QUESTIONS[typeOrder[typeIdx]];
+  document.getElementById('type-planet').textContent = item.planet;
+  document.getElementById('type-q').textContent = item.q.replace('___','_______');
+  document.getElementById('type-hint').textContent = `💡 ${item.hint}`;
+  const inp = document.getElementById('type-inp');
+  inp.value=''; inp.className='type-inp'; inp.disabled=false; inp.focus();
+  document.getElementById('type-fb').className='fb';
+  document.getElementById('type-next').classList.remove('show');
+  updateRound(typeIdx+1);
+}
+
+function checkType() {
+  const item = QUESTIONS[typeOrder[typeIdx]];
+  const inp  = document.getElementById('type-inp');
+  const fb   = document.getElementById('type-fb');
+  const val  = inp.value.toLowerCase().trim().replace(/'/g,"'");
+  const ans  = item.ans.toLowerCase().replace(/'/g,"'");
+  inp.disabled = true;
+  if(val===ans) {
+    inp.classList.add('ok');
+    fb.textContent='🌟 Brilliant! That\'s correct!'; fb.className='fb show ok';
+    addPts(15 + streak*2);
+  } else {
+    inp.classList.add('err');
+    fb.textContent=`❌ The answer is: ${item.ans}`; fb.className='fb show err';
+    loseLife();
+  }
+  document.getElementById('type-next').classList.add('show');
+}
+
+/* ═══════════════════════════
+   GAME 3: WORD ORDER
+═══════════════════════════ */
+const woState = { placed:[], chipIdxMap:{} };
+
+function showOrder() {
+  if(ordIdx >= ordOrder.length) { showWin('order'); return; }
+  const item = ORDER_SENTENCES[ordOrder[ordIdx]];
+  document.getElementById('ord-planet').textContent = PLANETS[ordIdx % PLANETS.length];
+  document.getElementById('ord-fb').className='fb';
+  document.getElementById('ord-next').classList.remove('show');
+  updateRound(ordIdx+1);
+
+  woState.placed = [];
+  const shuffled = shuffle(item.words.map((w,i)=>({w,i})));
+  const chips = document.getElementById('wo-chips');
+  chips.innerHTML='';
+  const area  = document.getElementById('wo-area');
+  area.innerHTML='';
+
+  shuffled.forEach(({w,i}) => {
+    const chip = document.createElement('span');
+    chip.className='wo-chip';
+    chip.textContent=w;
+    chip.dataset.idx=i;
+    chip.dataset.word=w;
+    chip.onclick = () => {
+      if(chip.classList.contains('used')) return;
+      chip.classList.add('used');
+      woState.placed.push({word:w, chipEl:chip});
+      const placed = document.createElement('span');
+      placed.className='wo-placed';
+      placed.textContent=w;
+      placed.onclick=()=>{
+        const pi = woState.placed.findIndex(p=>p.chipEl===chip);
+        if(pi>-1) woState.placed.splice(pi,1);
+        placed.remove();
+        chip.classList.remove('used');
+      };
+      area.appendChild(placed);
+    };
+    chips.appendChild(chip);
+  });
+}
+
+function checkOrder() {
+  const item = ORDER_SENTENCES[ordOrder[ordIdx]];
+  const placed = woState.placed.map(p=>p.word).join(' ');
+  const fb = document.getElementById('ord-fb');
+  if(placed === item.ans) {
+    fb.textContent='🎯 Perfect order! Great job!'; fb.className='fb show ok';
+    addPts(20 + streak*2);
+  } else {
+    fb.textContent=`❌ Try again! Correct order: ${item.ans}`; fb.className='fb show err';
+    loseLife();
+  }
+  document.getElementById('ord-next').classList.add('show');
+}
+
+/* ═══════════════════════════
+   GAME 4: ALIEN SORT
+═══════════════════════════ */
+let sortItems = [], dragItem = null;
+
+function initSort() {
+  sortItems = shuffle(SORT_ITEMS).slice(0, 9);
+  ['aff','neg','int'].forEach(cat => {
+    document.getElementById('zone-'+cat).innerHTML='';
+  });
+  const bank = document.getElementById('alien-bank');
+  bank.innerHTML='';
+  document.getElementById('sort-fb').className='fb';
+  document.getElementById('sort-win').classList.remove('show');
+
+  sortItems.forEach((item, i) => {
+    const el = document.createElement('div');
+    el.className='sort-word';
+    el.textContent=item.text;
+    el.dataset.cat=item.cat;
+    el.dataset.idx=i;
+    el.draggable=true;
+    el.ondragstart=()=>{ dragItem=el; el.classList.add('dragging'); };
+    el.ondragend=()=>el.classList.remove('dragging');
+    // touch support
+    el.onclick=()=>touchSort(el);
+    bank.appendChild(el);
+  });
+}
+
+let touchSelected = null;
+function touchSort(el) {
+  if(el.parentElement.id==='alien-bank') {
+    if(touchSelected) touchSelected.style.outline='';
+    touchSelected=el;
+    el.style.outline='2px solid var(--star)';
+  } else {
+    // move back to bank
+    document.getElementById('alien-bank').appendChild(el);
+    el.className='sort-word';
+    el.style.outline='';
+    touchSelected=null;
+  }
+}
+
+function dropItem(event, cat) {
+  if(!dragItem) {
+    // touch fallback
+    if(touchSelected) {
+      const zone = document.getElementById('zone-'+cat);
+      zone.appendChild(touchSelected);
+      touchSelected.className=`sort-word placed-${cat}`;
+      touchSelected.style.outline='';
+      touchSelected.onclick=()=>touchSort(touchSelected);
+      touchSelected=null;
+    }
+    return;
+  }
+  const zone = document.getElementById('zone-'+cat);
+  zone.appendChild(dragItem);
+  dragItem.className=`sort-word placed-${cat}`;
+  dragItem.onclick=()=>touchSort(dragItem);
+  dragItem=null;
+}
+
+// Also allow clicking zone label to place selected
+['aff','neg','int'].forEach(cat=>{
+  const zone = document.getElementById('zone-'+cat);
+  zone.parentElement.onclick=()=>{
+    if(touchSelected && !zone.contains(touchSelected)) {
+      zone.appendChild(touchSelected);
+      touchSelected.className=`sort-word placed-${cat}`;
+      touchSelected.style.outline='';
+      touchSelected.onclick=()=>touchSort(touchSelected);
+      touchSelected=null;
+    }
+  };
+});
+
+function checkSort() {
+  let tot=0, cor=0;
+  ['aff','neg','int'].forEach(cat=>{
+    const zone = document.getElementById('zone-'+cat);
+    zone.querySelectorAll('.sort-word').forEach(el=>{
+      tot++;
+      if(el.dataset.cat===cat) { cor++; el.style.boxShadow='0 0 0 3px var(--mint)'; }
+      else el.style.boxShadow='0 0 0 3px var(--rocket)';
+    });
+  });
+  const fb = document.getElementById('sort-fb');
+  const pct = Math.round(cor/tot*100);
+  if(pct===100) {
+    fb.textContent=`👾 PERFECT! All ${tot} sentences sorted correctly!`;
+    fb.className='fb show ok';
+    addPts(30);
+    confetti();
+    setTimeout(()=>showWin('sort'),1500);
+  } else {
+    fb.textContent=`❌ ${cor}/${tot} correct. Red border = wrong spaceship! Try again!`;
+    fb.className='fb show err';
+  }
+}
+
+/* ═══════════════════════════
+   WIN
+═══════════════════════════ */
+function showWin(mode) {
+  confetti();
+  document.getElementById(`${mode}-win`).classList.add('show');
+  const msgs = [
+    `🌟 ${pts} points! You're a Past Simple PRO!`,
+    `🚀 Amazing! ${streak} answer streak at your best!`,
+    `⭐ Incredible! You blasted through all rounds!`,
+  ];
+  const txtEl = document.getElementById(`${mode}-win-txt`);
+  if(txtEl) txtEl.textContent = msgs[Math.floor(Math.random()*msgs.length)];
+}
+
+/* ═══════════════════════════
+   INIT
+═══════════════════════════ */
+blastOrder = initOrder(QUESTIONS, ROUND_COUNT);
+typeOrder  = initOrder(QUESTIONS, ROUND_COUNT);
+ordOrder   = initOrder(ORDER_SENTENCES, ROUND_COUNT);
+showBlast();
+initSort();
+</script>
+</body>
+</html>
